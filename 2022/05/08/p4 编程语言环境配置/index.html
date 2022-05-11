@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.11.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="前言p4 （官网链接：https:&#x2F;&#x2F;p4.org&#x2F;）是一种用于网络设备的领域特定语言，指定数据平面设备(交换机、网卡、路由器、过滤器等)如何处理包。 本文主要介绍一下 p4 这门编程语言的虚拟机环境配置，供小伙伴们参考。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="p4环境配置">
+<meta property="og:url" content="http://example.com/2022/05/08/p4%20%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/index.html">
+<meta property="og:site_name" content="WeiJian-M">
+<meta property="og:description" content="前言p4 （官网链接：https:&#x2F;&#x2F;p4.org&#x2F;）是一种用于网络设备的领域特定语言，指定数据平面设备(交换机、网卡、路由器、过滤器等)如何处理包。 本文主要介绍一下 p4 这门编程语言的虚拟机环境配置，供小伙伴们参考。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/86a9f3b37cd14cd793ed534bd71d79cc.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/81ab163f397c434884294dff744bba25.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/8e3a357d08cf498eaec46d9128596a7a.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/4b558162b73a4693845afeae94750f20.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a8123a04f30e4be9a0024c45dc26c37f.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/d5d69dbdb2a94c9e9870c20c5bf7c9b6.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/d303315a54b04ccb9995c44c03a07818.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/c1589869b50c40a19e9866ae1777048e.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/fa8e01fbfc3a41f6a1afb5dd9bb8e277.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/9634b7c7eb374b31b479aba1c329f070.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/550cbe5f8149476b9db8ae0aa3cd8f5d.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/282d70490f5f45df9fd72c1086dab806.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/fa6b782f2dbb487c94a0e160b35975db.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/c8904718946c468e9b291402bef5f4fa.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/ce134f379dd74a42804326c769ce52c0.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/003f626dc7dc4629b4807e4395379f73.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/59c86bc5fa7746f1a246f1ba466b7ea6.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2a8e4692a0c04aa7a4e6ee5fe621f5ca.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/66a0513005e8404d89fc24a1b8d59258.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/6875f9c85ebb4b9b886ab06fa93c6367.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/08982d5998614df6a8ef3ce50928d09d.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_15,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/f1655b3fb76c4c90a888ce83f687a973.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/0557f7c9708a48c88e2127e9febe5439.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/c9478883ce2e4d5f8743cb39fe32eb51.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/f456404afa08433eb447f54ee0abedf3.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a02a9f25da5a4ef7ae68bcfc4e647887.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b067aae8e9154223bf8b4529c7a177eb.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/56ab54e2f0124d3b8926409144de2e35.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/1713bb04ce5843e498ee31b23d661f5f.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/cb3b70ea4c864f1982b44ad8dc92ffc4.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/d37c71b3b5c841ed8a705c528146409f.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/33624c62285d429ab22ed80c5c158ce9.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/fabfa4d531e142a090403d347daca8fa.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/5da4c34b96734943aabf59eec279c70e.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/71bda76890b54df3896952e2456f765e.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/0a21957dcd9c4f52a74be2b15e9628d1.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/fccd54908f754057b7fb67ed35825799.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/164f2cfa16934628ad742b96c2f0da66.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/0942ee12398d4c8b80fc211c26fde5da.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/8377bbfb0e464d7199a6bc2fcf9401c8.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/35677fa04f5d44f5aa53734bc7649495.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/9e191dd8831a4441871734ade01135b2.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/9cb6188a4fa041ff9d58e9071bb4f03e.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/e39550913b874423970c4b3f89c712b3.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/e425b0e6c9304bb7b70a5f539c7512aa.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/dbb319abca9f40758bb890ebc1e6971d.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2d9666fc9a0d4d51b628b9b1ef462d89.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/6116d0dfafc54d47a480db8991d01e29.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/ca006905e63f4daea38ddee31de9df9e.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/e15070c92c7149c3805ae07c5535a07e.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b25c9d00d7a64a06a0c2850dae3fb3a0.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/ed290ea70358492dba70d0c6210dc001.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a4e56d9728184accb12bdb7720466312.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/c3bc2723e27f4c58a5b3a55d76df8f63.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/ce58897b1b64437d95d21ef75669b63f.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/e421c4fd0cf34f079c899a33ea4505ed.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/832993d55b2241a9a43831c74147f9e5.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2f6c643f6846483aacf0f677ffe11ee6.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/79a864470a824ea48d72af6f0779a2df.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/0c64a12b6c14467bbcbaf4b0e6cf96bc.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a4e3a06e6b0146ba98e58b52a3b43d20.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/8dcafe41a8964ff2bdb00c6245dad156.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/544ebf8668fa496ba2953d88a9bc7897.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+<meta property="article:published_time" content="2022-05-08T03:23:06.000Z">
+<meta property="article:modified_time" content="2022-05-11T15:39:08.285Z">
+<meta property="article:author" content="WeiJian-M">
+<meta property="article:tag" content="p4">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/86a9f3b37cd14cd793ed534bd71d79cc.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center">
+
+
+<link rel="canonical" href="http://example.com/2022/05/08/p4%20%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2022/05/08/p4%20%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/","path":"2022/05/08/p4 编程语言环境配置/","title":"p4环境配置"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>p4环境配置 | WeiJian-M</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="WeiJian-M" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">WeiJian-M</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">3</span></a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">7</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">6</span></a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BB%BA%E8%AE%AE%E7%9B%B4%E6%8E%A5%E7%9C%8B%E7%AC%AC%E4%BA%8C%E7%A7%8D%E6%96%B9%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">建议直接看第二种方法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E7%A7%8D%E6%96%B9%E6%B3%95%EF%BC%9Ap4%E5%AE%98%E6%96%B9%E6%95%99%E7%A8%8B%E9%87%8C%E7%9A%84%E6%96%B9%E6%B3%95%EF%BC%88%E4%B8%8D%E5%BB%BA%E8%AE%AE%EF%BC%8C%E6%88%91%E6%B2%A1%E5%AE%89%E8%A3%85%E6%88%90%E5%8A%9F%EF%BC%89"><span class="nav-number">3.</span> <span class="nav-text">第一种方法：p4官方教程里的方法（不建议，我没安装成功）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E4%B8%8B%E8%BD%BD%E5%B9%B6%E5%AE%89%E8%A3%85-Virtual-Box"><span class="nav-number">3.1.</span> <span class="nav-text">1.1 下载并安装 Virtual Box</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E4%B8%8B%E8%BD%BD%E5%B9%B6%E5%AE%89%E8%A3%85-Vagrant"><span class="nav-number">3.2.</span> <span class="nav-text">1.2 下载并安装 Vagrant</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E5%88%A9%E7%94%A8-Vagrant-%E5%AE%89%E8%A3%85%E8%99%9A%E6%8B%9F%E6%9C%BA"><span class="nav-number">3.3.</span> <span class="nav-text">1.3  利用 Vagrant 安装虚拟机</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E7%A7%8D%E6%96%B9%E6%B3%95%EF%BC%9A%E7%9B%B4%E6%8E%A5%E5%AF%BC%E5%85%A5%E5%B7%B2%E7%BB%8F%E9%85%8D%E7%BD%AE%E5%A5%BD%E7%9A%84%E8%99%9A%E6%8B%9F%E9%95%9C%E5%83%8F%E6%96%87%E4%BB%B6"><span class="nav-number">4.</span> <span class="nav-text">第二种方法：直接导入已经配置好的虚拟镜像文件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E4%B8%8B%E8%BD%BD%E5%B9%B6%E5%AE%89%E8%A3%85-Virtual-Box"><span class="nav-number">4.1.</span> <span class="nav-text">2.1 下载并安装 Virtual Box</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E5%AF%BC%E5%85%A5%E9%95%9C%E5%83%8F%E6%96%87%E4%BB%B6"><span class="nav-number">4.2.</span> <span class="nav-text">2.2 导入镜像文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%EF%BC%88%E8%AE%B0%E5%BD%95%EF%BC%89%E5%85%B6%E4%BB%96%E9%95%9C%E5%83%8F%E6%96%87%E4%BB%B61"><span class="nav-number">4.3.</span> <span class="nav-text">2.3 （记录）其他镜像文件1</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%EF%BC%88%E8%AE%B0%E5%BD%95%EF%BC%89%E5%85%B6%E4%BB%96%E9%95%9C%E5%83%8F%E6%96%87%E4%BB%B62"><span class="nav-number">4.4.</span> <span class="nav-text">2.4 （记录）其他镜像文件2</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Reference"><span class="nav-number">5.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="WeiJian-M"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">WeiJian-M</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdn.jsdelivr.net/npm/@creativecommons/vocabulary@2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/WeiJian-M" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/08/p4%20%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="WeiJian-M">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="WeiJian-M">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="p4环境配置 | WeiJian-M">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          p4环境配置
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-05-08 11:23:06" itemprop="dateCreated datePublished" datetime="2022-05-08T11:23:06+08:00">2022-05-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-05-11 23:39:08" itemprop="dateModified" datetime="2022-05-11T23:39:08+08:00">2022-05-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/" itemprop="url" rel="index"><span itemprop="name">环境配置</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p><strong>p4</strong> （官网链接：<a target="_blank" rel="noopener" href="https://p4.org/">https://p4.org/</a>）是一种用于网络设备的领域特定语言，指定数据平面设备(交换机、网卡、路由器、过滤器等)如何处理包。</p>
+<p>本文主要介绍一下 p4 这门编程语言的<strong>虚拟机环境配置</strong>，供小伙伴们参考。</p>
+<span id="more"></span>
+
+<p>下面介绍两种环境配置方法：</p>
+<p><strong>第一种</strong>是p4官方教程里的方法（由于p4的环境配置复杂，所以官方直接给我们打包好了安装虚拟机的一系列文件，我们只需要按照步骤操作就好。不建议用这种方法，因为很难安装成功，但是在这里我还是要记录一下安装步骤，供大家参考）；</p>
+<p><strong>第二种</strong>方法是直接导入已经配置好的虚拟镜像文件，一般为 .ova 或者 .ovf 文件，下文中有获取链接。</p>
+<h1 id="建议直接看第二种方法"><a href="#建议直接看第二种方法" class="headerlink" title="建议直接看第二种方法"></a><a href="#jump">建议直接看第二种方法</a></h1><p><code>如果不想了解官网安装步骤的话可以直接看第二种方法</code></p>
+<h1 id="第一种方法：p4官方教程里的方法（不建议，我没安装成功）"><a href="#第一种方法：p4官方教程里的方法（不建议，我没安装成功）" class="headerlink" title="第一种方法：p4官方教程里的方法（不建议，我没安装成功）"></a>第一种方法：p4官方教程里的方法（不建议，我没安装成功）</h1><p>打开 p4 的官方教程：<a target="_blank" rel="noopener" href="https://github.com/p4lang/tutorials">https://github.com/p4lang/tutorials</a>，你会看到下面这个界面，这里面有p4语言的相关练习<code>exercises</code>、安装虚拟环境所必要的文件等。</p>
+<p><img src="https://img-blog.csdnimg.cn/86a9f3b37cd14cd793ed534bd71d79cc.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>我们直接看下面的README.md，并且翻到下面这一部分：</p>
+<p><img src="https://img-blog.csdnimg.cn/81ab163f397c434884294dff744bba25.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>按照红框里的步骤，逐一下载所需要的软件并执行相关操作：</p>
+<h2 id="1-1-下载并安装-Virtual-Box"><a href="#1-1-下载并安装-Virtual-Box" class="headerlink" title="1.1 下载并安装 Virtual Box"></a>1.1 下载并安装 Virtual Box</h2><p>下载链接：<a target="_blank" rel="noopener" href="https://www.virtualbox.org/wiki/Downloads">https://www.virtualbox.org/wiki/Downloads</a>，点击这个链接会看到下面的页面，由于我的电脑是Window系统，所以我选择<code>Windows hosts</code>，点击即可下载。其他系统的小伙伴可以自行搜索如何下载安装。<br><img src="https://img-blog.csdnimg.cn/8e3a357d08cf498eaec46d9128596a7a.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>0、下载好了，双击安装：</p>
+<p><img src="https://img-blog.csdnimg.cn/4b558162b73a4693845afeae94750f20.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>1、点击下一步<br><img src="https://img-blog.csdnimg.cn/a8123a04f30e4be9a0024c45dc26c37f.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>2、点击浏览更改安装位置，尽量不要装在C盘（系统盘），这里我装在了 <code>D:\VirtualBox\ </code>目录下，点击下一步：<br><img src="https://img-blog.csdnimg.cn/d5d69dbdb2a94c9e9870c20c5bf7c9b6.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>3、点击下一步：<br><img src="https://img-blog.csdnimg.cn/d303315a54b04ccb9995c44c03a07818.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>4、点击 是<br><img src="https://img-blog.csdnimg.cn/c1589869b50c40a19e9866ae1777048e.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>5、安装完成，点击完成并打开VirtualBox：<br><img src="https://img-blog.csdnimg.cn/fa8e01fbfc3a41f6a1afb5dd9bb8e277.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>6、打开 <strong>全局设定</strong>：</p>
+<p><img src="https://img-blog.csdnimg.cn/9634b7c7eb374b31b479aba1c329f070.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>7、修改默认虚拟电脑位置，就是给我们后面安装的虚拟机设定一个安装目录，并且以后我们的虚拟机都会安装到这个目录下。<strong>确保这个目录有足够的存储空间</strong>，最好不要在C盘（系统盘），这里我放在了<code>D:\VirtualBos VMs</code>这个目录下，然后点击 OK：</p>
+<p><img src="https://img-blog.csdnimg.cn/550cbe5f8149476b9db8ae0aa3cd8f5d.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>8、然后关闭VirtualBox，我们安装VirtualBox的工作就结束啦！！<br><img src="https://img-blog.csdnimg.cn/282d70490f5f45df9fd72c1086dab806.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<h2 id="1-2-下载并安装-Vagrant"><a href="#1-2-下载并安装-Vagrant" class="headerlink" title="1.2 下载并安装 Vagrant"></a>1.2 下载并安装 Vagrant</h2><p>下载链接：<a target="_blank" rel="noopener" href="https://www.vagrantup.com/downloads">https://www.vagrantup.com/downloads</a><br>根据系统类型选择要下载的文件，我是win10 x86 64位的，所以选择了 <code>Amd64</code>，不过我试了另外一个<code>686</code>的，好像效果是一样的，不太清楚他们两个的区别是什么，反正随便下载一个就好啦<br><img src="https://img-blog.csdnimg.cn/fa6b782f2dbb487c94a0e160b35975db.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>0、下载好了，双击安装<br><img src="https://img-blog.csdnimg.cn/c8904718946c468e9b291402bef5f4fa.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>1、点击Next</p>
+<p><img src="https://img-blog.csdnimg.cn/ce134f379dd74a42804326c769ce52c0.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>2、接受，Next<br><img src="https://img-blog.csdnimg.cn/003f626dc7dc4629b4807e4395379f73.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>3、更改安装文件夹，最好不要在C盘，Next</p>
+<p><img src="https://img-blog.csdnimg.cn/59c86bc5fa7746f1a246f1ba466b7ea6.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>4、点击Install<br><img src="https://img-blog.csdnimg.cn/2a8e4692a0c04aa7a4e6ee5fe621f5ca.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>5、等待一会就安装好了<br><img src="https://img-blog.csdnimg.cn/66a0513005e8404d89fc24a1b8d59258.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>6、安装好了，Finish<br><img src="https://img-blog.csdnimg.cn/6875f9c85ebb4b9b886ab06fa93c6367.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>7、之后会弹出下面这个窗口，点击Yes重启计算机或者自己手动重启计算机<br><img src="https://img-blog.csdnimg.cn/08982d5998614df6a8ef3ce50928d09d.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_15,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>Vagrant 是没有图形界面的，所以安装完成后也没有桌面快捷方式。开机之后，打开终端，输入<code>vagrant version</code>，这样可以判断是否安装成功</p>
+<p><img src="https://img-blog.csdnimg.cn/f1655b3fb76c4c90a888ce83f687a973.png#pic_center" alt="在这里插入图片描述"></p>
+<p>8、通过 Vagrant 创建虚机需要先导入镜像文件，它们默认存储的位置在用户目录下的 <code>.vagrant.d</code> 目录下，对于 Windows 系统来说，就是 <code>C:\Users\用户名\.vagrant.d</code>。</p>
+<p>如果后续可能会用到较多镜像，或者你的 C 盘空间比较紧缺，可以通过设置环境变量VAGRANT_HOME 来设置该目录。</p>
+<p>打开系统设置，点击关于，然后点击右侧地高级系统设置<br><img src="https://img-blog.csdnimg.cn/0557f7c9708a48c88e2127e9febe5439.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>点击环境变量<br><img src="https://img-blog.csdnimg.cn/c9478883ce2e4d5f8743cb39fe32eb51.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>新建系统变量</p>
+<p><img src="https://img-blog.csdnimg.cn/f456404afa08433eb447f54ee0abedf3.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>在 Windows 系统中，可以这样操作：新建系统环境变量，环境变量名为 <code>VAGRANT_HOME</code>，变量值为 <code>D:\VirtualBos VMs\.vagrant.d</code> ，最后这个<code>.vagrant.d</code> 目录名称不是必须的，但是建议保持一致，这样一眼看上去就能知道这个目录是做什么用处的了。<strong>（可以注意到，这里的路径和刚刚我们安装Virtual Box时在全局设定中设置的虚拟机存放位置是一样的，这样做可以让我们以后更方便地管理自己的虚拟机）</strong><br><img src="https://img-blog.csdnimg.cn/a02a9f25da5a4ef7ae68bcfc4e647887.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>然后一路确定就好了，为了保险起见，最好再重启一下计算机。</p>
+<p>到这里，Vagrant 就安装好了。</p>
+<h2 id="1-3-利用-Vagrant-安装虚拟机"><a href="#1-3-利用-Vagrant-安装虚拟机" class="headerlink" title="1.3  利用 Vagrant 安装虚拟机"></a>1.3  利用 Vagrant 安装虚拟机</h2><p>首先我们要去官网下载一下相关文件：<a target="_blank" rel="noopener" href="https://github.com/p4lang/tutorials">https://github.com/p4lang/tutorials</a></p>
+<p><img src="https://img-blog.csdnimg.cn/b067aae8e9154223bf8b4529c7a177eb.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/56ab54e2f0124d3b8926409144de2e35.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>下载好之后解压，进入下面这个文件夹</p>
+<p><img src="https://img-blog.csdnimg.cn/1713bb04ce5843e498ee31b23d661f5f.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>输入 cmd ，回车进入终端：</p>
+<p><img src="https://img-blog.csdnimg.cn/cb3b70ea4c864f1982b44ad8dc92ffc4.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>如下：<br><img src="https://img-blog.csdnimg.cn/d37c71b3b5c841ed8a705c528146409f.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p><strong>以上步骤相信大家都能顺利完成</strong></p>
+<p><strong>接下来的步骤要保证有非常稳定的网络环境</strong><br>在终端输入 <code>vagrant up</code> ，接下来就是漫长的等待过程，在此期间，Virtual Box会被唤醒并自动新建一个虚拟机，如果过顺利的话，按照官方说法，大概一两个小时之后，我们虚拟机就会完全安装完成，这个虚拟机里有我们运行p4语言所需要的所有环境。当然，这只是理论情况。<br><img src="https://img-blog.csdnimg.cn/33624c62285d429ab22ed80c5c158ce9.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<hr>
+<p>然而遗憾的是，我并没有在安装过程中顺利下载所有资源，从而导致虚拟机安装失败。当初我以为是网络不稳定，但是换了几个不同的网络之后，还是不行，这时我已经安装了3次了，每次<code>vagrant up</code> 之后都要等将近两个小时才能出结果，每次都是在下面这个界面卡一个多小时，然后报一大堆获取资源出错的错误，可想而知内心很崩溃。<br><img src="https://img-blog.csdnimg.cn/fabfa4d531e142a090403d347daca8fa.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/5da4c34b96734943aabf59eec279c70e.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>最后仔细分析了报错的原因，发现有些资源的获取链接不是国内的，所以要FQ才能下载这些资源，事实证明也确实是这个原因，但是由于FQ后网络不稳定，试了几次还是没有成功，最后果断放弃。</p>
+<p>如果有大佬安装成功了，希望可以克隆一份放在评论区，蟹蟹！！！</p>
+<p><span id="jump"></span></p>
+<h1 id="第二种方法：直接导入已经配置好的虚拟镜像文件"><a href="#第二种方法：直接导入已经配置好的虚拟镜像文件" class="headerlink" title="第二种方法：直接导入已经配置好的虚拟镜像文件"></a>第二种方法：直接导入已经配置好的虚拟镜像文件</h1><p>由于用第一种方法没有安装成功，我就在网上搜索有没有已经安装好的镜像文件，这样就可以用Virtual Box直接导入使用了。</p>
+<p>最后在一位大佬的学习笔记中发现了一个配置好的镜像文件（链接：<a target="_blank" rel="noopener" href="https://www.zhihu.com/people/yaoj-x/posts">https://www.zhihu.com/people/yaoj-x/posts</a>），他的这篇文章中给的链接时谷歌云盘，我下了好长时间才下载成功，下面是网盘链接，方便大家自取：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">链接：https://pan.baidu.com/s/10JgFwffsPCyw6g7TVp8Asg </span><br><span class="line">提取码：2de6 </span><br><span class="line">--来自百度网盘超级会员V4的分享</span><br></pre></td></tr></table></figure>
+
+
+
+<p>另外，这位大佬的笔记也是非常好，非常适合入门p4，推荐大家去看一下。</p>
+<p>接下来介绍具体的安装步骤。</p>
+<h2 id="2-1-下载并安装-Virtual-Box"><a href="#2-1-下载并安装-Virtual-Box" class="headerlink" title="2.1 下载并安装 Virtual Box"></a>2.1 下载并安装 Virtual Box</h2><p>这里和 1.1 中的步骤是一样的，就不再重复写了。</p>
+<h2 id="2-2-导入镜像文件"><a href="#2-2-导入镜像文件" class="headerlink" title="2.2 导入镜像文件"></a>2.2 导入镜像文件</h2><p>下载好上面网盘里的文件</p>
+<p><img src="https://img-blog.csdnimg.cn/71bda76890b54df3896952e2456f765e.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>打开Virtual Box，点击导入虚拟机<br><img src="https://img-blog.csdnimg.cn/0a21957dcd9c4f52a74be2b15e9628d1.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>选择我们刚刚下载好的<code>p4-learning.ova</code>文件<br><img src="https://img-blog.csdnimg.cn/fccd54908f754057b7fb67ed35825799.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/164f2cfa16934628ad742b96c2f0da66.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/0942ee12398d4c8b80fc211c26fde5da.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>点击导入</p>
+<p><img src="https://img-blog.csdnimg.cn/8377bbfb0e464d7199a6bc2fcf9401c8.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>大概十几分钟就能完成</p>
+<p><img src="https://img-blog.csdnimg.cn/35677fa04f5d44f5aa53734bc7649495.png#pic_center" alt="在这里插入图片描述"><br>安装好了，点击启动（需要等待几分钟）<br><img src="https://img-blog.csdnimg.cn/9e191dd8831a4441871734ade01135b2.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>启动之后大概是这个样子<br><img src="https://img-blog.csdnimg.cn/9cb6188a4fa041ff9d58e9071bb4f03e.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>打开终端，输入<code>git clone https://github.com/p4lang/tutorials</code>，下载我们想要的p4教程<br><img src="https://img-blog.csdnimg.cn/e39550913b874423970c4b3f89c712b3.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/e425b0e6c9304bb7b70a5f539c7512aa.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/dbb319abca9f40758bb890ebc1e6971d.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>这时我们的主文件夹里会出现一个<code>tutorial</code>目录</p>
+<p><img src="https://img-blog.csdnimg.cn/2d9666fc9a0d4d51b628b9b1ef462d89.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br><code>tutorial</code>目录里的<code>exercises</code>目录就是我们想要的p4练习</p>
+<p><img src="https://img-blog.csdnimg.cn/6116d0dfafc54d47a480db8991d01e29.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p>接下来就可以愉快地学习p4啦！！！</p>
+<p>唯一遗憾的是，官方给的最新版是Ubuntu 20，而这个是Ubuntu 16，不过没关系啦，对于学习p4来说已经够用了。</p>
+<hr>
+<h2 id="2-3-（记录）其他镜像文件1"><a href="#2-3-（记录）其他镜像文件1" class="headerlink" title="2.3 （记录）其他镜像文件1"></a>2.3 （记录）其他镜像文件1</h2><p>与此同时，从一位学长那里也要到了一份镜像文件，导入之后发现同样是Ununtu 16版本的，和2.2中的一样，只是文件格式和2.2中的不一样，就不再分享资源了。下面主要记录一下安装过程。</p>
+<p>安装好Virtual Box（安装步骤见1.1）之后，就可以导入文件了，学长给的是一个压缩包，解压之后，如下：<br><img src="https://img-blog.csdnimg.cn/ca006905e63f4daea38ddee31de9df9e.png#pic_center" alt="在这里插入图片描述"><br>打开Virtual Box，点击导入<br><img src="https://img-blog.csdnimg.cn/e15070c92c7149c3805ae07c5535a07e.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/b25c9d00d7a64a06a0c2850dae3fb3a0.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>选择刚刚文件夹中的这个文件：<br><img src="https://img-blog.csdnimg.cn/ed290ea70358492dba70d0c6210dc001.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/a4e56d9728184accb12bdb7720466312.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/c3bc2723e27f4c58a5b3a55d76df8f63.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/ce58897b1b64437d95d21ef75669b63f.png#pic_center" alt="在这里插入图片描述"><br>大概十几分钟就安装好了，然后启动虚拟机（启动虚拟机也需要几分钟时间），打开之后是这个样子的：</p>
+<p><img src="https://img-blog.csdnimg.cn/e421c4fd0cf34f079c899a33ea4505ed.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/832993d55b2241a9a43831c74147f9e5.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>可以看到，主目录下有一个tutorials文件夹，也就是官方的教程，据学长说这个他已经做过了，所以我们要再下载一份新的没做过的。打开终端，输入如下命令：<code>git clone https://github.com/p4lang/tutorials</code></p>
+<p>然后就会报错，大概意思就是这个目录已经存在，所以我们要把之前的<code>tutorials</code>目录删除或者重命名，这里我重命名为<code>tutorials00</code><br><img src="https://img-blog.csdnimg.cn/2f6c643f6846483aacf0f677ffe11ee6.png#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/79a864470a824ea48d72af6f0779a2df.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/0c64a12b6c14467bbcbaf4b0e6cf96bc.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"><br>再次输入<code>git clone https://github.com/p4lang/tutorials</code></p>
+<p><img src="https://img-blog.csdnimg.cn/a4e3a06e6b0146ba98e58b52a3b43d20.png#pic_center" alt="在这里插入图片描述"></p>
+<p>这样就下载好了，这个新的<code>tutorials</code>文件夹内有我们想要的练习题</p>
+<p><img src="https://img-blog.csdnimg.cn/8dcafe41a8964ff2bdb00c6245dad156.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<p><img src="https://img-blog.csdnimg.cn/544ebf8668fa496ba2953d88a9bc7897.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAU2F5cmFtXzA=,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述"></p>
+<h2 id="2-4-（记录）其他镜像文件2"><a href="#2-4-（记录）其他镜像文件2" class="headerlink" title="2.4 （记录）其他镜像文件2"></a>2.4 （记录）其他镜像文件2</h2><p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/gejuncheng/p/16178961.html">https://www.cnblogs.com/gejuncheng/p/16178961.html</a><br>Virtual Box 和 Vagrant的安装与下载可以参考 1.1 和 1.2</p>
+<hr>
+<h1 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h1><p><a target="_blank" rel="noopener" href="https://p4.org/learn/">https://p4.org/learn/</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/class_c/article/details/120623743">https://blog.csdn.net/class_c/article/details/120623743</a><br><a target="_blank" rel="noopener" href="https://www.zhihu.com/people/yaoj-x/posts">https://www.zhihu.com/people/yaoj-x/posts</a><br><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/259833884">https://zhuanlan.zhihu.com/p/259833884</a><br><a target="_blank" rel="noopener" href="https://github.com/p4lang/tutorials">https://github.com/p4lang/tutorials</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>WeiJian-M
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="http://example.com/2022/05/08/p4%20%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/" title="p4环境配置">http://example.com/2022/05/08/p4 编程语言环境配置/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/p4/" rel="tag"># p4</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/05/08/python%20opencv%E8%AF%BB%E5%8F%96%E7%81%B0%E5%BA%A6%E5%9B%BE%E5%B9%B6%E7%94%A8matplotlib%E6%98%BE%E7%A4%BA%E7%81%B0%E5%BA%A6%E5%9B%BE%E7%9A%84%E6%AD%A3%E7%A1%AE%E5%81%9A%E6%B3%95/" rel="prev" title="python opencv读取灰度图并用matplotlib显示灰度图的正确做法">
+                  <i class="fa fa-chevron-left"></i> python opencv读取灰度图并用matplotlib显示灰度图的正确做法
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2022/05/10/hexo%20+%20github%20+%20butterfly%20%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E4%BF%9D%E5%A7%86%E7%BA%A7%E6%95%99%E7%A8%8B%EF%BC%88%E6%97%A0%E9%9C%80%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%EF%BC%89/" rel="next" title="hexo + github + butterfly 搭建你的个人博客保姆级教程（无需云服务器）">
+                  hexo + github + butterfly 搭建你的个人博客保姆级教程（无需云服务器） <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">WeiJian-M</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
